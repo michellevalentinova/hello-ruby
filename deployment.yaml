@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-ruby
+  labels:
+    app: hello-ruby
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    name: http
+  - port: 443
+    name: https
+  selector:
+    app: hello-ruby
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: hello-ruby
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: hello-ruby
+    spec:
+      containers:
+      - name: hello-ruby
+        image: nandi108/hello-ruby
+        ports:
+        - containerPort: 80
+        - containerPort: 443
