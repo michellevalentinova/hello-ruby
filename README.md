@@ -60,3 +60,10 @@ In order to change the docker prefix (so the docker images can be generated usin
  - Docker security
  - Annual HTTPS certificate renewal
  - Self-building make_secret container instead of a statically generated one in case make_secret.go changes
+
+## PS. Further Improvements
+ - It would be great to have health checks on the Load balancers, not only on the pods
+ - It's possible to also do SSL offloading on the LB instead of inside nginx on the pod (depending on LB used), then puma could be run listening on an HTTP socket and get rid of nginx and supervisord completely
+ - If serving static files is necessary the nginx and ruby pods could be split as well, didn't have a preference and given the task description it looked more appropriate to have them in the same pod
+ - Supervisord could be replaced by djb's daemontools or an alternative
+ - The way I created the docker images for the pods is a bit like subclassing although maybe overkill in this situation the idea is that you might have a class Nginx with subclass HelloRuby, tagging should also be used if shared between projects
