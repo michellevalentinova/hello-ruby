@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -ux
-kubectl get deployments
+kubectl get replicationcontrollers
 kubectl get services
 kubectl describe service hello-ruby
 kubectl describe service hello-ruby-redis

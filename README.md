@@ -3,6 +3,9 @@
 ## Requirements
  - Google Cloud Platform account with billing enabled
  - Unix-like OS to run the shell scripts
+ - kubectl installed + ~/.kube/config configured with access to a Kubernetes cluster OR Kubernetes cluster setup below
+ - jq if connect to pods shell is desired
+ - openssl and docker to generate a self-signed HTTPS certificate and key
 
 
 ## Create Kubernetes Cluster and Setup Authentication (Provider Setup)
@@ -18,10 +21,11 @@
 ## Create Project
  - Inside project directory
  - ./create.sh
+ - ./generate_https_certificate.sh
  - Get IP address of LB: kubectl describe service hello-ruby | grep Ingress | cut -d ':' -f 2
  - Connect to LB:
    - curl http://IP
-   - curl https://IP
+   - curl -k https://IP
 
 ## Cleanup
 
@@ -39,17 +43,20 @@
 
 ## Changing Docker Prefix
 In order to change the docker prefix (so the docker images can be generated using a different account), the following files need to be updated:
- - docker_build_image.sh
  - deployment.yaml
+ - docker_build_image.sh
+ - generate_https_certificate.sh
  - All the Dockerfile files under docker/
 
 
 ## Further Improvements
+ - Use a real HTTPS certificate
  - Run httpd container as non-root
- - Health checks http://kubernetes.io/docs/user-guide/liveness/
  - Logging
  - Metrics
  - Alerting
  - Kubernetes security http://blog.kubernetes.io/2016/08/security-best-practices-kubernetes-deployment.html
  - Redis security http://redis.io/topics/security
  - Docker security
+ - Annual HTTPS certificate renewal
+ - Self-building make_secret container instead of a statically generated one in case make_secret.go changes

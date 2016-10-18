@@ -1,9 +1,11 @@
+# Load Balancer
 apiVersion: v1
 kind: Service
 metadata:
   name: hello-ruby
   labels:
     app: hello-ruby
+
 spec:
   type: LoadBalancer
   ports:
@@ -11,13 +13,17 @@ spec:
     name: http
   - port: 443
     name: https
+
   selector:
     service: httpd
+
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+# Ruby APP container
+apiVersion: v1
+kind: ReplicationController
 metadata:
   name: hello-ruby
+
 spec:
   replicas: 2
   template:
@@ -25,29 +31,55 @@ spec:
       labels:
         app: hello-ruby
         service: httpd
+
     spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: nginxsecret
+
       containers:
       - name: hello-ruby
         image: nandi108/hello-ruby
+
         ports:
         - containerPort: 80
         - containerPort: 443
+
+        volumeMounts:
+        - mountPath: /etc/nginx/ssl
+          name: secret-volume
+
+        # deep check - this currently connects to Redis as well
+        # doing the health check against the HTTPS port doesn't work, likely due to SSL certificate validation failure
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
+
 ---
+# Expose Redis to the Ruby APP
+# this also sets the service discovery environment variables
 apiVersion: v1
 kind: Service
 metadata:
   name: hello-ruby-redis
   labels:
     app: hello-ruby
+
 spec:
   type: NodePort
   ports:
   - port: 6379
   selector:
     service: redisd
+
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+# Redis container
+apiVersion: v1
+kind: ReplicationController
 metadata:
   name: hello-ruby-redis
 spec:
@@ -57,9 +89,18 @@ spec:
       labels:
         app: hello-ruby
         service: redisd
+
     spec:
       containers:
       - name: hello-ruby-redis
         image: nandi108/hello-ruby-redis
         ports:
         - containerPort: 6379
+
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
